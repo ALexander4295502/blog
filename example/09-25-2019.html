@@ -29,6 +29,9 @@
                 <div class="modal-content">
                     <div class="modal-body">
                         I am the first modal, try to click me.
+                        <button data-dismiss="modal" aria-label="Close">
+                                <span aria-hidden="true">&times;</span>
+                            </button>
                     </div>
                 </div>
             </div>
@@ -39,6 +42,9 @@
                 <div class="modal-content">
                     <div class="modal-body">
                         I am the second modal, try to click me.
+                        <button data-dismiss="modal" aria-label="Close">
+                                <span aria-hidden="true">&times;</span>
+                            </button>
                     </div>
                 </div>
             </div>
@@ -49,6 +55,9 @@
                 <div class="modal-content">
                     <div class="modal-body">
                         I am the third modal, try to click me.
+                        <button data-dismiss="modal" aria-label="Close">
+                            <span aria-hidden="true">&times;</span>
+                        </button>
                     </div>
                 </div>
             </div>
@@ -81,7 +90,17 @@
                                     .find('.modal-dialog')
                                         .css({'margin-top': 100 * (index + 1)})
                                     .end()
+                                    .css({
+                                        'z-index': 1040 + 10 * (index + 1)
+                                    })
                                     .modal('show');
+                                    setTimeout(function() {
+                                        console.log($('.modal-backdrop').not('.modal-stack'));
+                                        $('.modal-backdrop').not('.modal-stack').css({
+                                            'z-index': 1040 + 10 * (index + 1) - 1,
+                                            'opacity': 0.6
+                                        }).addClass('modal-stack');
+                                    }, 0);
                             }, 100 * index);
                         });
                         break;
