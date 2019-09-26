@@ -102,6 +102,10 @@
                 this.wrongDisplayButton.on('click', function() {
                     self.openModalHelper('INORDER_DEFAULT');
                 });
+
+                this.correctDisplayButton.on('click', function() {
+                    self.openModalHelper('INORDER_WITH_ZINDEX');
+                });
             },
             init: function() {
                 this.onClickDisplayButton();
