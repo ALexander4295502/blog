@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <meta charset="utf-8">
+        <title>Search highlight implementation</title>
+        <style>
+            table tbody tr:nth-child(2)::after {
+                content: '(You cannot match me if you don\'t check escape for regex)';
+                opacity: 0.5;
+            }
+
+            table tbody tr:nth-child(3)::after {
+                content: '(You cannot match me if you don\'t check case insensitive)';
+                opacity: 0.5;
+            }
+        </style>
+    </head>
+    <body>
+        <div>
+            <div style="display: flex; flex-direction: column; max-width: 300px; margin-bottom: 10px;">
+                <label>Search Input: </label>
+                <input id="searchInput" type="text">
+                <label>Escape for regex?: </label>
+                <input id="escapeCheckbox" type="checkbox">
+                <label>Case Insensitive?: </label>
+                <input id="caseCheckbox" type="checkbox">
+            </div> 
+            <table id="targetTable">
+                <thead>
+                    <tr>
+                        <th>test content</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>I am a text</td>
+                    </tr>
+                    <tr>
+                        <td>&^\?^|</td>
+                    </tr>
+                    <tr>
+                        <td>I AM A TEST</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </body>
+</html>
+<script>
+    var Demo = {
+        tbody: document.getElementById('targetTable').querySelector('tbody'),
+        escapePattern: function(pattern) {
+            return pattern.replace(/[\-\[\]\/\{\}\(\)\*\+\?\.\\\^\$\|]/g, "\\$&");
+        },
+        getRegex: function(patterns) {
+            var options = {
+                escape: document.getElementById('escapeCheckbox').checked,
+                caseInsensitive: document.getElementById('caseCheckbox').checked
+            };
+            var self = this;
+            var escapedPatterns = [];
+            patterns.map(function(pattern) {
+                escapedPatterns.push(options.escape ? self.escapePattern(pattern) : pattern);
+            });
+            return new RegExp("(" + escapedPatterns.join('|') + ")", options.caseInsensitive ? 'ig' : 'g');
+        },
+        highlightTextNode: function(textNode, match) {
+            var wrapperNode = document.createElement('strong');
+            var patternNode = textNode.splitText(match.index);
+            patternNode.splitText(match[0].length);
+            wrapperNode.appendChild(patternNode.cloneNode(true));
+            textNode.parentNode.replaceChild(wrapperNode, patternNode);
+            textNode.parentNode.dataset.dirty = true;
+        },
+        searchTable: function(query) {
+            var self = this;
+            var regex = this.getRegex(query.split(' '));
+
+            Array.from(this.tbody.querySelectorAll('tr')).map(function(tr) {
+                var matched = false;
+                tr.style.display = 'table-row';
+                Array.from(tr.querySelectorAll('td')).map(function(td) {
+
+                    if(td.dataset.originalText === undefined) {
+                        td.dataset.originalText = td.textContent;
+                    } else if(td.dataset.dirty) {
+                        td.textContent = td.dataset.originalText;
+                    }
+
+                    Array.from(td.childNodes).map(function(childNode) {
+                        if(childNode.nodeType === 3) {
+                            var match = regex.exec(childNode.data);
+                            if(match) {
+                                self.highlightTextNode(childNode, match);
+                                matched = true;
+                            }
+                        }
+                    });
+                });
+                if(!matched) {
+                    tr.style.display = "none";
+                }
+            });
+        },
+        onSearchInput: function() {
+            var self = this;
+            var input = document.getElementById('searchInput');
+            input.addEventListener('input', function(e) {
+                var query = e.target.value;
+                self.searchTable(query);
+            });
+        },
+        init: function() {
+            this.onSearchInput();
+        }
+    };
+    Demo.init();
+</script>
