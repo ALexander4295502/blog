@@ -13,6 +13,15 @@
                 content: '(You cannot match me if you don\'t check case insensitive)';
                 opacity: 0.5;
             }
+
+            table tbody td {
+                border: 1px solid #000;
+            }
+            
+            strong {
+                padding: 0.2rem;
+                background: yellow;
+            }
         </style>
     </head>
     <body>
@@ -41,6 +50,12 @@
                     <tr>
                         <td>I AM A TEST</td>
                     </tr>
+                    <tr>
+                        <td>
+                            <h3>I'm not only text</h3>
+                            <h5>But also markup</h5>
+                        </td>
+                    </tr>
                 </tbody>
             </table>
         </div>
@@ -64,28 +79,57 @@
             });
             return new RegExp("(" + escapedPatterns.join('|') + ")", options.caseInsensitive ? 'ig' : 'g');
         },
+        isWrapper: function(node) {
+            return node.nodeType === 1 && node.getAttribute('wrapper');
+        },
+        unhighlightAll: function(node, cb) {
+            var self = this;
+            node = node || this.tbody;
+            if(node) {
+                if(self.isWrapper(node)) {
+                    var parentNode = node.parentNode;
+                    parentNode.replaceChild(node.childNodes[0], node);
+                    parentNode.normalize();
+                } else {
+                    Array.from(node.childNodes).map(function(childNode) {
+                        self.unhighlightAll(childNode);
+                    });
+                }
+            }
+        },
         highlightTextNode: function(textNode, match) {
             var wrapperNode = document.createElement('strong');
             var patternNode = textNode.splitText(match.index);
             var remainingTextNode = patternNode.splitText(match[0].length);
+            wrapperNode.setAttribute('wrapper', true);
             wrapperNode.appendChild(patternNode.cloneNode(true));
             textNode.parentNode.replaceChild(wrapperNode, patternNode);
-            textNode.parentNode.dataset.dirty = true;
             return remainingTextNode;
         },
         searchTable: function(query) {
             var self = this;
             var regex = this.getRegex(query.split(' '));
             var matched = false;
-            var textNodeChecker = function(childNode) {
-                regex.lastIndex = 0;
-                var match = regex.exec(childNode.data);
-                if(match) {
-                    var remainingTextNode = self.highlightTextNode(childNode, match);
-                    if(query && remainingTextNode && remainingTextNode.data) {
-                        textNodeChecker(remainingTextNode);
+            var domNodeChecker = function(domNode) {
+                if(self.isWrapper(domNode)) {
+                    return;
+                }
+                if(domNode.nodeType === 3) {
+                    regex.lastIndex = 0;
+                    var match = regex.exec(domNode.data);
+                    if(match) {
+                        if(query) {
+                            var remainingTextNode = self.highlightTextNode(domNode, match);
+                            if(remainingTextNode && remainingTextNode.data) {
+                                domNodeChecker(remainingTextNode);
+                            }
+                        }
+                        matched = true;
                     }
-                    matched = true;
+                } else {
+                    Array.from(domNode.childNodes).map(function(childNode) {
+                        domNodeChecker(childNode);
+                    });
                 }
             };
 
@@ -93,18 +137,7 @@
                 matched = false;
                 tr.style.display = 'table-row';
                 Array.from(tr.querySelectorAll('td')).map(function(td) {
-
-                    if(td.dataset.originalText === undefined) {
-                        td.dataset.originalText = td.textContent;
-                    } else if(td.dataset.dirty) {
-                        td.textContent = td.dataset.originalText;
-                    }
-
-                    Array.from(td.childNodes).map(function(childNode) {
-                        if(childNode.nodeType === 3) {
-                            textNodeChecker(childNode);
-                        }
-                    });
+                    domNodeChecker(td);
                 });
                 if(!matched) {
                     tr.style.display = "none";
@@ -116,7 +149,10 @@
             var input = document.getElementById('searchInput');
             input.addEventListener('input', function(e) {
                 var query = e.target.value;
-                self.searchTable(query);
+                self.unhighlightAll();
+                setTimeout(function() {
+                    self.searchTable(query);
+                }, 0);
             });
         },
         init: function() {
