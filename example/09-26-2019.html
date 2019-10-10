@@ -59,7 +59,7 @@
             };
             var self = this;
             var escapedPatterns = [];
-            patterns.map(function(pattern) {
+            patterns.filter(Boolean).map(function(pattern) {
                 escapedPatterns.push(options.escape ? self.escapePattern(pattern) : pattern);
             });
             return new RegExp("(" + escapedPatterns.join('|') + ")", options.caseInsensitive ? 'ig' : 'g');
@@ -67,17 +67,30 @@
         highlightTextNode: function(textNode, match) {
             var wrapperNode = document.createElement('strong');
             var patternNode = textNode.splitText(match.index);
-            patternNode.splitText(match[0].length);
+            var remainingTextNode = patternNode.splitText(match[0].length);
             wrapperNode.appendChild(patternNode.cloneNode(true));
             textNode.parentNode.replaceChild(wrapperNode, patternNode);
             textNode.parentNode.dataset.dirty = true;
+            return remainingTextNode;
         },
         searchTable: function(query) {
             var self = this;
             var regex = this.getRegex(query.split(' '));
+            var matched = false;
+            var textNodeChecker = function(childNode) {
+                regex.lastIndex = 0;
+                var match = regex.exec(childNode.data);
+                if(match) {
+                    var remainingTextNode = self.highlightTextNode(childNode, match);
+                    if(query && remainingTextNode && remainingTextNode.data) {
+                        textNodeChecker(remainingTextNode);
+                    }
+                    matched = true;
+                }
+            };
 
             Array.from(this.tbody.querySelectorAll('tr')).map(function(tr) {
-                var matched = false;
+                matched = false;
                 tr.style.display = 'table-row';
                 Array.from(tr.querySelectorAll('td')).map(function(td) {
 
@@ -89,11 +102,7 @@
 
                     Array.from(td.childNodes).map(function(childNode) {
                         if(childNode.nodeType === 3) {
-                            var match = regex.exec(childNode.data);
-                            if(match) {
-                                self.highlightTextNode(childNode, match);
-                                matched = true;
-                            }
+                            textNodeChecker(childNode);
                         }
                     });
                 });
