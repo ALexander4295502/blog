@@ -18,9 +18,9 @@
                 border: 1px solid #000;
             }
             
-            strong {
-                padding: 0.2rem;
-                background: yellow;
+            mark {
+                background: #ff0;
+                color: #000;
             }
         </style>
     </head>
@@ -63,6 +63,7 @@
 </html>
 <script>
     var Demo = {
+        AVAILABLE_TAGS: ['a', 'h3', 'h2', 'h5', 'p', 'strong'],
         tbody: document.getElementById('targetTable').querySelector('tbody'),
         escapePattern: function(pattern) {
             return pattern.replace(/[\-\[\]\/\{\}\(\)\*\+\?\.\\\^\$\|]/g, "\\$&");
@@ -98,7 +99,7 @@
             }
         },
         highlightTextNode: function(textNode, match) {
-            var wrapperNode = document.createElement('strong');
+            var wrapperNode = document.createElement('mark');
             var patternNode = textNode.splitText(match.index);
             var remainingTextNode = patternNode.splitText(match[0].length);
             wrapperNode.setAttribute('wrapper', true);
@@ -144,18 +145,31 @@
                 }
             });
         },
+        renderTable: function() {
+            for(var i = 0; i < 1000; i++) {
+                var tdContent = document.createElement(
+                    this.AVAILABLE_TAGS[Math.floor(Math.random() * this.AVAILABLE_TAGS.length)]
+                );
+
+                tdContent.textContent = 'Lorem ipsum dolor sit āmet, consetetur sadipscing elitr,';
+                var td = document.createElement('td');
+                var tr = document.createElement('tr');
+                td.appendChild(tdContent);
+                tr.appendChild(td);
+                this.tbody.appendChild(tr);
+            }
+        },
         onSearchInput: function() {
             var self = this;
             var input = document.getElementById('searchInput');
             input.addEventListener('input', function(e) {
                 var query = e.target.value;
-                self.unhighlightAll();
-                setTimeout(function() {
-                    self.searchTable(query);
-                }, 0);
+                self.unhighlightAll.call(self, null);
+                self.searchTable.call(self, query);
             });
         },
         init: function() {
+            this.renderTable();
             this.onSearchInput();
         }
     };
