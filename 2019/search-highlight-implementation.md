@@ -80,7 +80,7 @@ There are several 3rd-party libraries that support the search highlight, eg: **t
 All these libraries I mentioned above don't use the innerHTML directly to implement the highlight, and they choose to go over all the textNode and make the changes on them to finish the job:
 
 ~~~javascript
-// This is my script following their core source code implementation
+// This is my script follow their core source code implementation
  var highlightTextNode = function(textNode, match) {
     var wrapperNode = document.createElement('mark');
     var patternNode = textNode.splitText(match.index);
