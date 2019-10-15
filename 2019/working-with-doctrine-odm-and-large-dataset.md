@@ -49,9 +49,92 @@ foreach($result as $item) {
 }
 ~~~
 
+What does detach mean? if you go throught the API source code of doctrine, you can find in `DocumantManager.php`:
+~~~php
+ /**
+* Detaches a document from the DocumentManager, causing a managed document to
+* become detached.  Unflushed changes made to the document if any
+* (including removal of the document), will not be synchronized to the database.
+* Documents which previously referenced the detached document will continue to
+* reference it.
+*
+* @param object $document The document to detach.
+* @throws \InvalidArgumentException when the $document param is not an object
+*/
+public function detach($document)
+{
+    if ( ! is_object($document)) {
+        throw new \InvalidArgumentException(gettype($document));
+    }
+    $this->unitOfWork->detach($document);
+}
+~~~
+
+Then if you dive deeper into the `UnitOfWork.php` you can find:
+~~~php
+ /**
+    * Executes a detach operation on the given document.
+    *
+    * @param object $document
+    * @param array $visited
+    * @internal This method always considers documents with an assigned identifier as DETACHED.
+    */
+private function doDetach($document, array &$visited)
+{
+    $oid = spl_object_hash($document);
+    if (isset($visited[$oid])) {
+        return; // Prevent infinite recursion
+    }
+
+    $visited[$oid] = $document; // mark visited
+
+    switch ($this->getDocumentState($document, self::STATE_DETACHED)) {
+        case self::STATE_MANAGED:
+            $this->removeFromIdentityMap($document);
+            unset($this->documentInsertions[$oid], $this->documentUpdates[$oid],
+                $this->documentDeletions[$oid], $this->documentIdentifiers[$oid],
+                $this->documentStates[$oid], $this->originalDocumentData[$oid],
+                $this->parentAssociations[$oid], $this->documentUpserts[$oid],
+                $this->hasScheduledCollections[$oid]);
+            break;
+        case self::STATE_NEW:
+        case self::STATE_DETACHED:
+            return;
+    }
+
+    $this->cascadeDetach($document, $visited);
+}
+~~~
+
+By browsing the definition of `detach` and `doDetach`, we can see that doctrine keep all the **object-level transaction** in the `UnitOfWork`, which can be used in later flush process, and since `DocumentManager` have no idea whether you need corresponding transaction data later, it will keep all of them in the identityMap by default and will freed them (by using `unset()`) after the process finished. So the solution becomes apparent: you can start this free memory process **in advance**
+
 By calling `detach()` we will let the document manager detach the document and **unflush all the changes that haven't been flushed to DB**. After that any reference variable related will be freed sooner or later by the php garbage collector.
 
-Also there is another way to walk around this problem. Since the doctrine keep the `UnitOfWork` only for the object-level changes, if you tell doctrine not to give you the hydrated result of the query, the `UnitOfWork` will never be created.
+Also there is another way to walk around this problem. Since the doctrine keep the `UnitOfWork` only for the object-level changes, if you tell doctrine not to give you the hydrated result of the query, the `UnitOfWork` will never be created:
+
+~~~php
+/**
+    * Wrapper method for MongoCursor::getNext().
+    *
+    * If configured, the result may be a hydrated document class instance.
+    *
+    * @see \Doctrine\MongoDB\Cursor::getNext()
+    * @see http://php.net/manual/en/mongocursor.getnext.php
+    * @return array|object|null
+    */
+public function getNext()
+{
+    $next = $this->baseCursor->getNext();
+
+    if ($next !== null && $this->hydrate) {
+        return $this->unitOfWork->getOrCreateDocument($this->class->name, $next, $this->unitOfWorkHints);
+    }
+
+    return $next;
+}
+~~~
+
+We can see that `unitOfWork` only create document for tracking transaction when `hydrate` flag is `true`, thus we don't need to worry about the previous problem in the following code snippet.
 
 ~~~php
 $result = $dao->findAll(
