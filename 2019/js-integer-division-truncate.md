@@ -109,7 +109,7 @@ More efficient way
 
 There is another **faster substitute** for `Math.floor()` and `Math.ceil()`: 
 
-Using the double Bitwise NOT - The `~` operator.
+**Using the double Bitwise NOT - The `~` operator.**
 
 Apart from "inverting the bits of its operand" bitwise NOT in JavaScript is actually very useful not only when it comes to binary. Firstly, it has a very interesting effect on integers - **it converts the integer to -(N+1) value** just like the `toInteger()` function we just implemented above:
 
