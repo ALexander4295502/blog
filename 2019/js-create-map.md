@@ -73,3 +73,14 @@ Test case | total memory useage
 `Object.create(null)` | 9.1 MB
 
 As we can see there is a significant memory usage difference between `Map` and `Object.create(null)/{}`, which is a trade-off with the time performance if we combine the previous result.
+
+Summary
+----------
+Test case | total memory useage | Ops/sec
+----------| -------- | --------
+**Base line** | 2.1 MB | -
+`{}`   | 9.0 MB | 2,677 (±15.13% 13% slower)
+`Map` | **6.0 MB (smallest)** | 893 (±0.91% 67% slower)
+`Object.create(null)` | 9.1 MB | **2,999 (±12.79% fastest)**
+
+As we can see, there is no a best choice unless you decide to take **time performance**/**memory usage** as first consideration, and IMHO, I prefer to use `Object.create(null)`, not only its compatibility with old browsers but also the fastest performance, as for the memory usage, we will put it in a low priority since we hardly have chance to handle enormous quantity of mapping.
