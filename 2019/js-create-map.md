@@ -38,7 +38,7 @@ After **ES6** introduced the standard built-in object `Map`, in most time will t
 
 So the main factor that determine us which one to use is the performance, so I just run a [jsperf test cases](https://jsperf.com/js-map-compare) to have a benchmark for the read/write performance testing, and the result is:
 
-Test case | Ops/sec
+Test case | Ops/sec (10000 R/W as a Op)
 ----------| --------
 `{}`   | 2,677 (±15.13% 13% slower)
 `Map` | 893 (±0.91% 67% slower)
@@ -76,7 +76,7 @@ As we can see there is a significant memory usage difference between `Map` and `
 
 Summary
 ----------
-Test case | total memory useage | Ops/sec
+Test case | total memory useage | Ops/sec (10000 R/W as a Op)
 ----------| -------- | --------
 **Base line** | 2.1 MB | -
 `{}`   | 9.0 MB | 2,677 (±15.13% 13% slower)
