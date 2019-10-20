@@ -1,7 +1,7 @@
 ---
 title: How to do the integer division truncate
 author: Zheng Yuan
-date: 10/20/2019
+date: 10/19/2019
 tags: ['vanilla js', 'js', 'operator', 'native api']
 ---
 
