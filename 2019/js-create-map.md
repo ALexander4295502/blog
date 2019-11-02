@@ -83,4 +83,4 @@ Test case | total memory useage | Ops/sec (10000 R/W as a Op)
 `Map` | **6.0 MB (smallest)** | 893 (±0.91% 67% slower)
 `Object.create(null)` | 9.1 MB | **2,999 (±12.79% fastest)**
 
-As we can see, there is no a best choice unless you decide to take **time performance**/**memory usage** as first consideration, and IMHO, I prefer to use `Object.create(null)`, not only its compatibility with old browsers but also the fastest performance, as for the memory usage, we will put it in a low priority since we hardly have chance to handle enormous quantity of mapping.
+As we can see, there is no a best choice unless you decide to take **time performance**/**memory usage** as first consideration, and IMHO, I prefer to use `Object.create(null)`, not only its compatibility with old browsers but also the fastest performance, as for the memory usage, we will put it in a low priority since we hardly have chance to handle enormous quantity of mapping. But sometimes when I need to track the insertion order of the key and keep tracking the size of the map, I prefer to use `Map` object which support these feature natively.
