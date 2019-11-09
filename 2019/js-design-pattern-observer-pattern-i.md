@@ -57,7 +57,7 @@ ObserverList.prototype.Get = function (index) {
     }
 }
 
-Observer.prototype.Insert = function (obj, index) {
+ObserverList.prototype.Insert = function (obj, index) {
     var pointer = -1;
     if (index === 0) {
         this.observerList.unshift(obj);
