@@ -1,5 +1,5 @@
 ---
-title: JS design pattern - Observer Pattern II
+title: JS design pattern - Observer Pattern III
 author: Zheng Yuan
 date: 11/09/2019
 tags: ['vanilla js', 'js', 'design pattern', 'observer', 'excerpt']
