@@ -1,11 +1,11 @@
 ---
-title: JS design pattern - mediator pattern
+title: JS design pattern - Mediator pattern
 author: Zheng Yuan
 date: 11/24/2019
 tags: ['vanilla js', 'js', 'design pattern', 'mediator', 'excerpt']
 ---
 
-JS design pattern - mediator pattern
+JS design pattern - Mediator pattern
 ============
 
 A mediator is a behavioral design pattern that allows us to expose a unified interface through which the different parts of a system may communicate.
