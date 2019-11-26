@@ -6,5 +6,5 @@ var a = 1;
     // since it declare a local varialbe in the function-level scope
     // and hoist it before operations in this scope
 	function a() {}
-})()
-console.log(a);
+})();
+console.log(a); // 1 (since inner scope declare a local variable 'a' by hoisting the function declaration)
